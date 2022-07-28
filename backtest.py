@@ -1,4 +1,4 @@
-''' ONE DAY BITCOIN 1M CHART'''
+''' ONE MONTH AVAXUSDT 30m CHART'''
 
 ''' STEP 1: Initialize / Define '''
 
@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from itertools import islice
 
-filename = 'BTCUSDT-1m-2022-07-11.csv' #plug in like 10 CSVs
+filename = 'AVAXUSDT-30m-2022-06.csv' #plug in like 10 CSVs
 dataSet = pd.read_csv(filename,usecols=[0,1,2])
 
 dataSet = pd.DataFrame(dataSet)
@@ -14,9 +14,9 @@ data = dataSet.values.tolist()
 
 #print(data)
 
-period = 240  #pre-determined buy window
-capital = 1440  #total capital
-allowance = 240  #amount spent per buy
+period = 240 #pre-determined buy window
+capital = 144000  #total capital
+allowance = 24000  #amount spent per buy
 current_allowance = 0  #how much can be spent currently
 haveBought= False  #have we bought during this period?
 
@@ -123,16 +123,16 @@ for i in range(len(sigma)):
     for j in range(len(data[i])):
         if i%period == 0 and j == 2 and capital > 0:
             haveBought = False
-            if (SMA[i]- 2*sigma[i]) > data[i+period][j] and current_allowance > 0 and haveBought is False:
-                buy(current_allowance, data[i+period][j])
+            if (SMA[i]- 2*sigma[i]) > data[i+period-1][j] and current_allowance > 0 and haveBought is False:
+                buy(current_allowance, data[i+period-1][j])
                 capital -= current_allowance
                 current_allowance = 0
                 haveBought = True
                 print('The remaining balance is: ', capital)
                 if capital == 0:
                     break
-            elif (SMA[i]- sigma[i]) > data[i+period][j] and current_allowance > 0 and haveBought is False:
-                buy(current_allowance, data[i+period][j])
+            elif (SMA[i]- sigma[i]) > data[i+period-1][j] and current_allowance > 0 and haveBought is False:
+                buy(current_allowance, data[i+period-1][j])
                 capital -= current_allowance
                 current_allowance = 0
                 haveBought = True
@@ -147,16 +147,16 @@ for i in range(len(sigma)):
                 else:
                     print('the current allowance is: ', current_allowance)
         elif i%period !=0 and j==2 and capital > 0:
-            if (SMA[i]- 2*sigma[i]) > data[i+period][j] and current_allowance > 0 and haveBought is False:                
-                buy(current_allowance, data[i+period][j])
+            if (SMA[i]- 2*sigma[i]) > data[i+period-1][j] and current_allowance > 0 and haveBought is False:                
+                buy(current_allowance, data[i+period-1][j])
                 capital -= current_allowance
                 current_allowance = 0
                 haveBought = True
                 print('The remaining balance is: ', capital)
                 if capital == 0: 
                     break
-            elif (SMA[i]- sigma[i]) > data[i+period][j] and current_allowance > 0 and haveBought is False:
-                buy(current_allowance, data[i+period][j])
+            elif (SMA[i]- sigma[i]) > data[i+period-1][j] and current_allowance > 0 and haveBought is False:
+                buy(current_allowance, data[i+period-1][j])
                 capital -= current_allowance
                 current_allowance = 0
                 haveBought = True
@@ -165,14 +165,26 @@ for i in range(len(sigma)):
                     break
             else:
                 if current_allowance < capital:
-                    current_allowance += allowance
                     haveBought = False
-                    print('The current allowance is: ', current_allowance)
+                elif data[i+period-1][j] == data[-1][j]:
+                    buy(capital, data[i+period-1][j])
+                    capital = 0
+                    current_allowance = 0
+                    haveBought = True
+                    print('The remaining balance is: ', capital)
+                    break    
                 else:
                     print('the current allowance is: ', current_allowance)
         else: 
             if capital > 0 or capital - current_allowance < 0:
                 continue
+            elif data[i+period-1][j] == data[-1][j]:
+                buy(capital, data[i+period-1][j])
+                capital = 0
+                current_allowance = 0
+                haveBought = True
+                print('The remaining balance is: ', capital)
+                break
             else:
                 break
 
@@ -186,3 +198,4 @@ outcome = sum(assets)
 print('The amount of assets purchased with strategy is: ',outcome) 
 print('The amount of assets purchased via traditional strategy is: ',control)
 print('Did our strategy work? ', outcome > control)
+print('Strategy performance: ', outcome/control * 100 - 100, ' percent')
